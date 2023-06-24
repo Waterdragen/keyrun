@@ -1,12 +1,12 @@
 import json
 import pynput
+import time
 import threading
-import multiprocessing
 import tkinter as tk
 
 import actions
+from actions import HoldSession
 
-from time import sleep
 from tkinter import ttk
 from typing import Optional
 
@@ -76,18 +76,27 @@ class Main:
     master.geometry("960x540+100+100")
 
     def __init__(self):
+        # Create `filter` dropdown
+        self.active_filter = tk.StringVar(value="All")
+        filter_options = ("All", "mouse", "hotkey", "non char key", "input", "sleep")
+        filter_dropdown = ttk.Combobox(values=filter_options, state="readonly", textvariable=self.active_filter)
+        filter_dropdown.place(relx=0.05, rely=0.05)
+        filter_dropdown.bind("<<ComboboxSelected>>", self.filter_changed)
+        filter_dropdown.configure(font=("Consolas", 14))
+
         # Read action options
         with open("action_options.json", "r") as f:
-            self.actions_config: dict[str, dict[str, bool]] = json.load(f)
-        # Create the "actions" dropdown
-        actions_options = list(self.actions_config.keys())
-        self.active_action = tk.StringVar(value=actions_options[0])
-        action_dropdown = ttk.Combobox(values=actions_options, state="readonly", textvariable=self.active_action)
-        action_dropdown.place(relx=0.05, rely=0.1)
-        action_dropdown.bind("<<ComboboxSelected>>", self.action_changed)
-        action_dropdown.configure(font=("Consolas", 14))
+            self.actions_config: dict[str, dict[str, bool | str]] = json.load(f)
+        # Create the `actions` dropdown
+        self.actions_options: tuple[str, ...] = tuple(self.actions_config.keys())
+        self.active_action = tk.StringVar(value=self.actions_options[0])
+        self.action_dropdown = ttk.Combobox(values=self.actions_options, state="readonly",
+                                            textvariable=self.active_action)
+        self.action_dropdown.place(relx=0.05, rely=0.1)
+        self.action_dropdown.bind("<<ComboboxSelected>>", self.action_changed)
+        self.action_dropdown.configure(font=("Consolas", 14))
 
-        # Create the "Pick" button, and Initialize invisible fullscreen and picked coordinates
+        # Create the `Pick` button, and Initialize invisible fullscreen and picked coordinates
         self.pick_button = tk.Button(text="Pick", font=("Consolas", 14), command=self.pick_coordinate)
         self.pick_button.place(relx=0.5, rely=0.08)
         self.fake_fullscreen: Optional[tk.Toplevel] = None
@@ -102,6 +111,7 @@ class Main:
         # Create the workflow table
         self.table: Optional[ttk.Treeview] = None
         self.create_table()
+        self.table_columns_indexed = dict(zip(("Seq", "Action", "X", "Y", "Delay (ms)", "Repeat", "Comment"), range(7)))
 
         # Create the `Add` button
         self.add_button = tk.Button(self.master, text="Add", font=("Consolas", 14), command=self.add_row)
@@ -128,19 +138,32 @@ class Main:
         failsafe_dropdown.configure(font=("Consolas", 14))
 
         # Create the `Run` button
-        self.run_button = tk.Button(self.master, text="Run", font=("Consolas", 14), command=self.run_handler)
+        self.run_button = tk.Button(self.master, text="Run", font=("Consolas", 14), command=self.run_starter)
         self.run_button.place(relx=0.95, rely=0.8)
         self.run_flag = True
+        self.hold_session = HoldSession()
+        self.holds_next = False
 
         # MAIN WINDOW START
         self.master.mainloop()
 
+    def filter_changed(self, event: tk.Event = None):
+        active_filter = self.active_filter.get()
+        if active_filter == "All":
+            # Show all options
+            self.actions_options = tuple(k for k in self.actions_config.keys())
+        else:
+            # Filter options by class
+            self.actions_options = tuple(k for k in filter(lambda k: self.actions_config[k]["type"] == active_filter,
+                                                           self.actions_config.keys()))
+        self.action_dropdown["values"] = self.actions_options
+        self.active_action.set(self.actions_options[0])
+
     def action_changed(self, event: tk.Event):
-        if self.actions_config[self.active_action.get()]["coord"]:
+        if self.actions_config[self.active_action.get()]["args"] == "xy":
             self.pick_button["state"] = "normal"
         else:
             self.pick_button["state"] = "disabled"
-        print(f"action changed to {self.active_action.get()}")
 
     def pick_coordinate(self):
         # New invisible fullscreen window
@@ -156,7 +179,6 @@ class Main:
 
     def get_clicked_position(self, event: tk.Event):
         self.pick_x, self.pick_y = event.x_root, event.y_root
-        print(f"picked coordinates: ({self.pick_x}, {self.pick_y})")
         # Update the labels with the picked coordinates
         self.x_label.configure(text=f"X: {self.pick_x}")
         self.y_label.configure(text=f"Y: {self.pick_y}")
@@ -167,7 +189,7 @@ class Main:
 
     def create_table(self):
         # Create the table
-        column_names = ("Seq", "Action", "X", "Y", "Delay", "Repeat", "Comment")
+        column_names = ("Seq", "Action", "X", "Y", "Delay (ms)", "Repeat", "Comment")
         column_widths = (30, 60, 50, 50, 50, 50, 100)
         self.table = EditableTreeview(self.master, columns=column_names, show="headings")
         # Set the column headings
@@ -241,28 +263,95 @@ class Main:
         self.table.item(item1, values=(seq1, *values2))
         self.table.item(item2, values=(seq2, *values1))
 
-    def run_handler(self):
+    def col_index(self, header: str) -> int:
+        return self.table_columns_indexed[header]
+
+    def run_starter(self):
         self.run_button["state"] = "disabled"
         self.run_flag = True
+        self.holds_next = False
         listener = pynput.keyboard.Listener(on_press=self.failsafe)
         listener.start()
-        run_event = threading.Thread(target=self.run, daemon=True)
+        run_event = threading.Thread(target=self.run_and_end_handler, daemon=True)
         run_event.start()
+
+    def run_and_end_handler(self):
+        self.run()
+        self.run_flag = False
+        self.run_button["state"] = "normal"
 
     def failsafe(self, key):
         key_name = getattr(key, "name", key)
-        print(f"{key_name} ? {self.active_failsafe.get()}")
         if key_name == self.active_failsafe.get():
+            # Interrupt run flag to signal `self.run()`
+            print("program stopped")
             self.run_flag = False
             self.run_button["state"] = "normal"
 
     def run(self):
-        for i in range(5):
-            print("sleeping")
-            sleep(2)
+        for item in self.table.get_children():
+            values: list = self.table.item(item)["values"]
+            # Repeat action
+            for rep in range(values[self.col_index("Repeat")]):
+                # Logger
+                print(values)
+                # Delay before action
+                self.sleep(values[self.col_index("Delay (ms)")])
+                if not self.run_flag:
+                    return
+                action_name = values[self.col_index("Action")]
+                args: tuple = ()
+                match self.actions_config[action_name]["args"]:
+                    case None:
+                        pass
+                    case "xy":
+                        args = (values[self.col_index("X")], values[self.col_index("Y")])
+                    case "strength":
+                        raise NotImplementedError
+                    case "key":
+                        args = (self.actions_config[action_name]["key name"], )
+                    case "ms":
+                        args = (values[self.col_index("Delay (ms)")], )
+                    case "comment":
+                        args = (values[self.col_index("Comment")], )
+                    case "comment char":
+                        args = (values[self.col_index("Comment")][0], )
+                    case _:
+                        raise NotImplementedError
+                method_name = self.actions_config[action_name]["method"]
+                # imported
+                if self.actions_config[action_name]["use import"]:
+                    getattr(actions, method_name)(*args)
+                    continue
+                if method_name == "press_key":
+                    # Normal press
+                    if not self.holds_next:
+                        getattr(actions, method_name)(*args)
+                        continue
+                    # Hold key
+                    self.hold_key(*args)
+                    print(f"holding {args[0]} key")
+                    self.holds_next = False
+                    continue
+                # non-imported
+                getattr(Main, method_name)(self, *args)
+
+    def sleep(self, ms: int):
+        while ms > 1000:
+            time.sleep(1)
+            ms -= 1000
             if not self.run_flag:
-                break
-        self.run_button["state"] = "normal"
+                return
+        time.sleep(ms / 1000)
+
+    def hold_key(self, key: str):
+        self.hold_session.hold_key(key)
+
+    def hold_next_press(self):
+        self.holds_next = True
+
+    def release_all(self):
+        self.hold_session.release_all()
 
 
 if __name__ == '__main__':
