@@ -6,14 +6,17 @@ This app is still in the early stage and there are many things to be added
 <img src="https://raw.githubusercontent.com/Waterdragen/keyrun/main/Screenshot%20(81).png">
 
 ## WIP list
-- a working `Run` button
-- more action options (currently 16)
-  - target: 100 options
+- a fully working `Run` button
+- more action options (currently 67)
+  - short term target: 100 options
   - mouse (clicks, move, scroll, hold & release)
-  - hotkeys (press, hold & release)
-  - inputs
+  - hotkeys (press, hold & release) ✅for the most part
+  - inputs ✅
   - delay and sleep
-- `failsafe` activation after at most 1 sec (delay and action integration)
-- classify actions
+- `failsafe` activation after at most 1 sec (delay and action integration) (✅)other than the buggy behaviour
+- classify actions ✅
 - `save/load` csv
-- UI with images
+- UI
+  - font choice/size
+  - button positions
+  - images
