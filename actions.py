@@ -1,5 +1,5 @@
 import pyautogui as auto
-from time import sleep
+from time import sleep, perf_counter
 
 def left_click(x, y):
     auto.click(x=x, y=y)
@@ -40,11 +40,38 @@ def ctrl_c():
 def ctrl_v():
     auto.hotkey("ctrl", 'v')
 
-def hold_ctrl():
-    auto.keyDown("ctrl")
+def ctrl_a():
+    auto.hotkey("ctrl", 'a')
 
-def hold_alt():
-    auto.keyDown("alt")
+class HoldSession:
+    def __init__(self):
+        self.holding_keys: list[str] = []
 
-def hold_shift():
-    auto.keyDown("shift")
+    def hold_key(self, key: str):
+        auto.keyDown(key)
+        self.holding_keys.append(key)
+
+    def release_all(self):
+        for key in reversed(self.holding_keys):
+            auto.keyUp(key)
+        self.holding_keys.clear()
+
+def press_key(key: str):
+    auto.press(key)
+
+def type_comment(comment: str):
+    auto.typewrite(comment)
+
+def type_text_file(path: str):
+    with open(path, "r") as f:
+        auto.typewrite(f.read())
+
+if __name__ == '__main__':
+    t1 = perf_counter()
+    session = HoldSession()
+    session.hold_key("ctrl")
+    session.hold_key("alt")
+    session.hold_key("shift")
+    session.release_all()
+    t2 = perf_counter()
+    print(f"Time elapsed: {t2 - t1}s")
