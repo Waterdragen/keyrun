@@ -1,0 +1,66 @@
+{
+	"Left Click": {
+		"coord": true,
+		"input": false
+	},
+	"Left Double Click": {
+		"coord": true,
+		"input": false
+	},
+	"Middle Click": {
+		"coord": true,
+		"input": false
+	},
+	"Right Click": {
+		"coord": true,
+		"input": false
+	},
+	"Scroll Up": {
+		"coord": false,
+		"input": false
+	},
+	"Scroll Down": {
+		"coord": false,
+		"input": false
+	},
+	"Ctrl + Z": {
+		"coord": false,
+		"input": false
+	},
+	"Ctrl + X": {
+		"coord": false,
+		"input": false
+	},
+	"Ctrl + C": {
+		"coord": false,
+		"input": false
+	},
+	"Ctrl + V": {
+		"coord": false,
+		"input": false
+	},
+	"Ctrl + A": {
+		"coord": false,
+		"input": false
+	},
+	"Hold Ctrl": {
+		"coord": false,
+		"input": false
+	},
+	"Hold Alt": {
+		"coord": false,
+		"input": false
+	},
+	"Hold Shift": {
+		"coord": false,
+		"input": false
+	},
+	"Press Key": {
+		"coord": false,
+		"input": true
+	},
+	"Type Comment": {
+		"coord": false,
+		"input": true
+	}
+}
