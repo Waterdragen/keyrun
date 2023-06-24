@@ -3,6 +3,7 @@ Automate your mouse and keyboard to do cool things. Free and open source alterna
 
 ## Work in progress
 This app is still in the early stage and there are many things to be added
+<img src="https://raw.githubusercontent.com/Waterdragen/keyrun/main/Screenshot%20(81).png">
 
 ## WIP list
 - a working `Run` button
