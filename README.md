@@ -20,3 +20,7 @@ This app is still in the early stage and there are many things to be added
   - font choice/size
   - button positions
   - images
+
+## WIP issues
+- failsafe may fail occasionally
+- `Pick` button is sometimes disabled when switching types (`action_changed` method)
