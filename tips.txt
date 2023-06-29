@@ -1,0 +1,11 @@
+You can use `Hold next key` and `Press Comment Char` to long press w or any other alphanumeric keys.
+`Hold Ctrl` + `Press Comment Char` + `Release all` to make any ctrl hotkeys.
+You can select multiple rows and delete them at once.
+You can only move up or down one row at a time.
+Choose a `failsafe` key that you won't use throughout your program.
+After clicking `Pick`, you can single-click anywhere on the screen and it won't actually click it.
+Once you have accepted the coordinates with `Pick`, make sure to `Add` it to the table!
+Sleep doesn't do anything. To adjust the duration, you have to edit the delay ms.
+Delays happen before the actions.
+Delays use milliseconds. 1 second is 1000 ms and 1 minute is 60000 ms.
+Comment your actions so you know what's going the next time.
