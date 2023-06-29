@@ -3,17 +3,14 @@ import pynput
 import time
 import threading
 import tkinter as tk
+import webbrowser
 
 import actions
 from actions import HoldSession
 
 from tkinter import ttk
-from typing import Optional
+from typing import Optional, Final
 
-"""
-Helper function notes
-1.  event is a used parameter for tkinter event bindings
-"""
 
 class EditableTreeview(ttk.Treeview):
     def __init__(self, *args, **kwargs):
@@ -71,42 +68,60 @@ class EditableTreeview(ttk.Treeview):
 
 
 class Main:
-    master = tk.Tk()
-    master.title("Keyrun")
-    master.geometry("960x540+100+100")
+    MASTER = tk.Tk()
+    MASTER.title("Keyrun")
+    MASTER.geometry("960x540+100+100")
+    FONT: Final = ("Consolas", 14)
+    FONT_S: Final = ("Consolas", 11)
+    ICONS: Final = dict((Name, tk.PhotoImage(file=f"./icons/{Name}.png").zoom(2)) for Name in
+                        ("action", "add", "delete", "failsafe", "filter", "github", "movedown", "moveup",
+                         "pick", "run"))
+
+    # Note to self:
+    # keyword argument order convention:
+    # window(self.MASTER), text, font, image, compound, command
 
     def __init__(self):
+        # dropdown font settings
+        self.MASTER.option_add("*TCombobox*Listbox*Font", self.FONT_S)
         # Create `filter` dropdown
+        filter_label = tk.Label(self.MASTER, text="Type: ", font=self.FONT, image=self.ICONS["filter"],
+                                compound=tk.LEFT)
+        filter_label.place(relx=0.05, rely=0.05)
         self.active_filter = tk.StringVar(value="All")
         filter_options = ("All", "mouse", "hotkey", "non char key", "input", "sleep")
         filter_dropdown = ttk.Combobox(values=filter_options, state="readonly", textvariable=self.active_filter)
-        filter_dropdown.place(relx=0.05, rely=0.05)
+        filter_dropdown.place(relx=0.18, rely=0.06)
         filter_dropdown.bind("<<ComboboxSelected>>", self.filter_changed)
-        filter_dropdown.configure(font=("Consolas", 14))
+        filter_dropdown.configure(font=self.FONT)
 
         # Read action options
         with open("action_options.json", "r") as f:
             self.actions_config: dict[str, dict[str, bool | str]] = json.load(f)
         # Create the `actions` dropdown
+        action_label = tk.Label(self.MASTER, text="Action: ", font=self.FONT, image=self.ICONS["action"],
+                                compound=tk.LEFT)
+        action_label.place(relx=0.05, rely=0.11)
         self.actions_options: tuple[str, ...] = tuple(self.actions_config.keys())
         self.active_action = tk.StringVar(value=self.actions_options[0])
         self.action_dropdown = ttk.Combobox(values=self.actions_options, state="readonly",
-                                            textvariable=self.active_action)
-        self.action_dropdown.place(relx=0.05, rely=0.1)
+                                            textvariable=self.active_action, height=15)
+        self.action_dropdown.place(relx=0.18, rely=0.12)
         self.action_dropdown.bind("<<ComboboxSelected>>", self.action_changed)
-        self.action_dropdown.configure(font=("Consolas", 14))
+        self.action_dropdown.configure(font=self.FONT)
 
         # Create the `Pick` button, and Initialize invisible fullscreen and picked coordinates
-        self.pick_button = tk.Button(text="Pick", font=("Consolas", 14), command=self.pick_coordinate)
-        self.pick_button.place(relx=0.5, rely=0.08)
+        self.pick_button = tk.Button(self.MASTER, text="Pick", font=self.FONT, image=self.ICONS["pick"],
+                                     compound=tk.RIGHT, command=self.pick_coordinate)
+        self.pick_button.place(relx=0.53, rely=0.08)
         self.fake_fullscreen: Optional[tk.Toplevel] = None
         self.pick_x: int = 0
         self.pick_y: int = 0
         # Create the coordinate labels
-        self.x_label = tk.Label(text="X: ", font=("Consolas", 14))
-        self.x_label.place(relx=0.3, rely=0.1)
-        self.y_label = tk.Label(text="Y: ", font=("Consolas", 14))
-        self.y_label.place(relx=0.4, rely=0.1)
+        self.x_label = tk.Label(text="X: ", font=self.FONT)
+        self.x_label.place(relx=0.44, rely=0.08)
+        self.y_label = tk.Label(text="Y: ", font=self.FONT)
+        self.y_label.place(relx=0.44, rely=0.12)
 
         # Create the workflow table
         self.table: Optional[ttk.Treeview] = None
@@ -114,38 +129,56 @@ class Main:
         self.table_columns_indexed = dict(zip(("Seq", "Action", "X", "Y", "Delay (ms)", "Repeat", "Comment"), range(7)))
 
         # Create the `Add` button
-        self.add_button = tk.Button(self.master, text="Add", font=("Consolas", 14), command=self.add_row)
-        self.add_button.place(relx=0.57, rely=0.08)
+        self.add_button = tk.Button(self.MASTER, text="Add", font=self.FONT, image=self.ICONS["add"],
+                                    compound=tk.RIGHT, command=self.add_row)
+        self.add_button.place(relx=0.62, rely=0.08)
+
+        # Create the `Github` button
+        self.movedown_button = tk.Button(self.MASTER, text="Github", font=self.FONT, image=self.ICONS["github"],
+                                         compound=tk.RIGHT, command=self.open_github)
+        self.movedown_button.place(relx=0.71, rely=0.08)
 
         # Create the `Delete` button
-        self.delete_button = tk.Button(self.master, text="Delete", font=("Consolas", 14), command=self.delete_row)
-        self.delete_button.place(relx=0.63, rely=0.08)
+        self.delete_button = tk.Button(self.MASTER, text="Delete", font=self.FONT, image=self.ICONS["delete"],
+                                       compound=tk.RIGHT, command=self.delete_row)
+        self.delete_button.place(relx=0.85, rely=0.2)
 
         # Create the `Move Up` button
-        self.moveup_button = tk.Button(self.master, text="Move Up", font=("Consolas", 14), command=self.move_up)
-        self.moveup_button.place(relx=0.72, rely=0.08)
+        self.moveup_button = tk.Button(self.MASTER, text="Move Up", font=self.FONT, image=self.ICONS["moveup"],
+                                       compound=tk.RIGHT, command=self.move_up)
+        self.moveup_button.place(relx=0.85, rely=0.29)
 
         # Create the `Move Down` button
-        self.movedown_button = tk.Button(self.master, text="Move Down", font=("Consolas", 14), command=self.move_down)
-        self.movedown_button.place(relx=0.81, rely=0.08)
+        self.movedown_button = tk.Button(self.MASTER, text="Move Down", font=self.FONT, image=self.ICONS["movedown"],
+                                         compound=tk.RIGHT, command=self.move_down)
+        self.movedown_button.place(relx=0.85, rely=0.38)
 
         # Create the `Failsafe` dropdown
+        failsafe_label = tk.Label(self.MASTER, text="Failsafe: ", font=self.FONT, image=self.ICONS["failsafe"],
+                                  compound=tk.LEFT)
+        failsafe_label.place(relx=0.65, rely=0.85)
         failsafe_options = ("esc", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12")
         self.active_failsafe = tk.StringVar(value="esc")
         failsafe_dropdown = ttk.Combobox(values=failsafe_options, state="readonly", textvariable=self.active_failsafe,
                                          width=7)
-        failsafe_dropdown.place(relx=0.75, rely=0.8)
-        failsafe_dropdown.configure(font=("Consolas", 14))
+        failsafe_dropdown.place(relx=0.79, rely=0.86)
+        failsafe_dropdown.configure(font=self.FONT)
 
         # Create the `Run` button
-        self.run_button = tk.Button(self.master, text="Run", font=("Consolas", 14), command=self.run_starter)
-        self.run_button.place(relx=0.95, rely=0.8)
+        self.run_button = tk.Button(self.MASTER, text="Run", font=self.FONT, image=self.ICONS["run"],
+                                    compound=tk.RIGHT, command=self.run_starter)
+        self.run_button.place(relx=0.9, rely=0.85)
         self.run_flag = True
         self.hold_session = HoldSession()
         self.holds_next = False
 
         # MAIN WINDOW START
-        self.master.mainloop()
+        self.MASTER.mainloop()
+
+    """
+    Helper function notes
+    1.  event is a used parameter for tkinter event bindings
+    """
 
     def filter_changed(self, event: tk.Event = None):
         active_filter = self.active_filter.get()
@@ -167,14 +200,14 @@ class Main:
 
     def pick_coordinate(self):
         # New invisible fullscreen window
-        self.fake_fullscreen = tk.Toplevel(self.master)
+        self.fake_fullscreen = tk.Toplevel(self.MASTER)
         self.fake_fullscreen.attributes("-alpha", 1 / 256)
         self.fake_fullscreen.attributes("-fullscreen", True)
         # Binding window as button
         self.fake_fullscreen.bind("<Button-1>", self.get_clicked_position)
         self.fake_fullscreen.config(cursor="crosshair")
-        # Minimize master window while wait for the user to click on the fullscreen
-        self.master.iconify()
+        # Minimize MASTER window while wait for the user to click on the fullscreen
+        self.MASTER.iconify()
         self.fake_fullscreen.wait_window()
 
     def get_clicked_position(self, event: tk.Event):
@@ -182,26 +215,25 @@ class Main:
         # Update the labels with the picked coordinates
         self.x_label.configure(text=f"X: {self.pick_x}")
         self.y_label.configure(text=f"Y: {self.pick_y}")
-        # Unbind button, destroy fullscreen, and pop back master window
+        # Unbind button, destroy fullscreen, and pop back MASTER window
         self.fake_fullscreen.unbind("<Button-1>")
         self.fake_fullscreen.destroy()
-        self.master.deiconify()
+        self.MASTER.deiconify()
 
     def create_table(self):
         # Create the table
         column_names = ("Seq", "Action", "X", "Y", "Delay (ms)", "Repeat", "Comment")
-        column_widths = (30, 60, 50, 50, 50, 50, 100)
-        self.table = EditableTreeview(self.master, columns=column_names, show="headings")
+        column_widths = (30, 100, 30, 30, 60, 60, 200)
+        self.table = EditableTreeview(self.MASTER, columns=column_names, show="headings")
         # Set the column headings
         for col_name in column_names:
             self.table.heading(col_name, text=col_name)
         # Set the column widths
         for col_name, col_width in zip(column_names, column_widths):
-            self.table.column(col_name, width=col_width)
+            self.table.column(col_name, width=col_width, minwidth=col_width, stretch=True)
         # Add the table to the windiow
         self.table.pack(side=tk.TOP, padx=5, pady=5, fill=tk.BOTH, expand=True)
-        table_width = sum(column_widths) // 2
-        self.table.place(relwidth=0.5, width=table_width, relheight=0.5, relx=0.05, rely=0.2)
+        self.table.place(relwidth=0.75, relheight=0.6, relx=0.05, rely=0.2)
 
     def add_row(self):
         # Get the data for the new row
@@ -262,6 +294,10 @@ class Main:
         seq2, *values2 = values2
         self.table.item(item1, values=(seq1, *values2))
         self.table.item(item2, values=(seq2, *values1))
+
+    @staticmethod
+    def open_github():
+        webbrowser.open_new("https://github.com/Waterdragen/keyrun")
 
     def col_index(self, header: str) -> int:
         return self.table_columns_indexed[header]
