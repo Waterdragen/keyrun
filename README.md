@@ -10,11 +10,11 @@ This app is still in the early stage and there are many things to be added
 - more action options (currently 67)
   - short term target: 100 options
   - mouse (clicks, move, scroll, hold & release)
-  - hotkeys (press, hold & release) ✅for the most part
-  - inputs ✅
+  - hotkeys (press, hold & release)
+  - inputs
   - delay and sleep
-- `failsafe` activation after at most 1 sec (delay and action integration) (✅)other than the buggy behaviour
-- classify actions ✅
+- `failsafe` activation after at most 1 sec (delay and action integration)
+- classify actions 
 - `save/load` csv
 - UI
   - font choice/size
