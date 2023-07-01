@@ -20,6 +20,25 @@ This app is still in the early stage and there are many things to be added
   - font choice/size
   - button positions
   - images
+ 
+## WIP future plans
+- load csv file
+- fix disabled/enabled pick button
+- add mouse position by key press
+- tadd default delay ms
+- add script repeat
+- add more failsafe options (not all keyboards have f keys and esc)
+- add move mouse
+- renaming: up/down -> hold/release
+-renaming: hotkeys -> combokeys, non char keys -> presskeys
+- add a column for strength(scroll) 
+- logger window to print what's going on
+  - show warnings 
+  - e.g. `[WARN] ctrl key is held but never released!`
+- Settings:
+  - Add to the end / add after selected line (append mode/insert mode)
+  - show tips (show/hidden)
+  - compile/run mode
 
 ## WIP issues
 - failsafe may fail occasionally
