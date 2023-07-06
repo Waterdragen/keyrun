@@ -14,6 +14,21 @@ from tkinter import ttk
 from tkinter import filedialog
 from typing import Optional, Final
 
+MASTER = tk.Tk()
+MASTER.title("Keyrun")
+MASTER.geometry("960x540+100+100")
+MASTER.minsize(860, 450)
+FONT: Final = ("Consolas", 14)
+FONT_S: Final = ("Consolas", 11)
+ICONS: Final = dict((Name, tk.PhotoImage(file=f"./icons/{Name}.png").zoom(2)) for Name in
+                    ("action", "add", "delete", "failsafe", "filter", "github", "movedown", "moveup",
+                     "pick", "run", "save", "tip"))
+with open("tips.txt", 'r') as File:
+    TIPS: Final = tuple(Tip.strip() for Tip in File.readlines())
+
+# Note to self:
+# keyword argument order convention:
+# window(MASTER), text, font, image, compound, width, command
 
 class EditableTreeview(ttk.Treeview):
     def __init__(self, *args, **kwargs):
@@ -70,28 +85,68 @@ class EditableTreeview(ttk.Treeview):
         self.edit_entry.destroy()
 
 
+class SettingsWindow:
+    def __init__(self, main: "Main"):
+        self.TOP = tk.Toplevel(MASTER)
+        self.TOP.title("Settings")
+        self.TOP.geometry("480x360+150+150")
+        self.TOP.resizable(False, False)
+
+        # Create the `Insert` or `Append` button (add_button)
+        self.add_mode: bool = main.add_mode == "Insert"
+        self.add_label = tk.Label(self.TOP, text="Toggle add row mode: ", font=FONT)
+        self.add_label.place(relx=0.05, rely=0.17)
+        self.add_button = tk.Button(self.TOP, text=main.add_mode, font=FONT, image=ICONS["add"], compound=tk.RIGHT,
+                                    command=self.toggle_mode)
+        self.add_button.place(relx=0.55, rely=0.15)
+
+        # Create the `Tips` button
+        self.view_tips = main.view_tips
+        self.tips_label = tk.Label(self.TOP, text="Toggle tips visibility: ", font=FONT)
+        self.tips_label.place(relx=0.05, rely=0.29)
+        self.tips_button = tk.Button(self.TOP, text=("Visible" if main.view_tips else ""), font=FONT, compound=tk.RIGHT,
+                                     width=10, command=self.toggle_tips)
+        self.tips_button.place(relx=0.55, rely=0.27)
+
+        # Create the `Run` button
+        self.run_mode = main.run_mode
+        self.run_label = tk.Label(self.TOP, text="Toggle Run/Compile: ", font=FONT)
+        self.run_label.place(relx=0.05, rely=0.41)
+        self.run_button = tk.Button(self.TOP, text=("Run" if main.run_mode else "Compile"), font=FONT,
+                                    compound=tk.RIGHT, width=10, command=self.toggle_run)
+        self.run_button.place(relx=0.55, rely=0.39)
+
+    def toggle_mode(self):
+        self.add_mode = not self.add_mode
+        if self.add_mode:
+            self.add_button.config(text="Insert")
+        else:
+            self.add_button.config(text="Append")
+
+    def toggle_tips(self):
+        self.view_tips = not self.view_tips
+        if self.view_tips:
+            self.tips_button.config(text="Visible")
+        else:
+            self.tips_button.config(text="")
+
+    def toggle_run(self):
+        self.run_mode = not self.run_mode
+        if self.run_mode:
+            self.run_button.config(text="Run")
+        else:
+            self.run_button.config(text="Compile")
+
+
 class Main:
-    MASTER = tk.Tk()
-    MASTER.title("Keyrun")
-    MASTER.geometry("960x540+100+100")
-    MASTER.minsize(860, 450)
-    FONT: Final = ("Consolas", 14)
-    FONT_S: Final = ("Consolas", 11)
-    ICONS: Final = dict((Name, tk.PhotoImage(file=f"./icons/{Name}.png").zoom(2)) for Name in
-                        ("action", "add", "delete", "failsafe", "filter", "github", "movedown", "moveup",
-                         "pick", "run", "save", "tip"))
-    with open("tips.txt", 'r') as f:
-        TIPS: Final = tuple(Tip.strip() for Tip in f.readlines())
-
-    # Note to self:
-    # keyword argument order convention:
-    # window(self.MASTER), text, font, image, compound, width, command
-
     def __init__(self):
         # dropdown font settings
-        self.MASTER.option_add("*TCombobox*Listbox*Font", self.FONT_S)
+        MASTER.option_add("*TCombobox*Listbox*Font", FONT_S)
+
+        # ============ TOP PANEL ============
+        # -----------------------------------
         # Create `filter` dropdown
-        filter_label = tk.Label(self.MASTER, text="Type: ", font=self.FONT, image=self.ICONS["filter"],
+        filter_label = tk.Label(MASTER, text="Type: ", font=FONT, image=ICONS["filter"],
                                 compound=tk.LEFT)
         filter_label.place(relx=0.03, rely=0.05)
         self.active_filter = tk.StringVar(value="All")
@@ -99,14 +154,13 @@ class Main:
         filter_dropdown = ttk.Combobox(values=filter_options, state="readonly", textvariable=self.active_filter)
         filter_dropdown.place(relx=0.16, rely=0.06)
         filter_dropdown.bind("<<ComboboxSelected>>", self.filter_changed)
-        filter_dropdown.configure(font=self.FONT)
+        filter_dropdown.configure(font=FONT)
 
         # Read action options
         with open("action_options.json", "r") as f:
             self.actions_config: dict[str, dict[str, bool | str]] = json.load(f)
         # Create the `actions` dropdown
-        action_label = tk.Label(self.MASTER, text="Action: ", font=self.FONT, image=self.ICONS["action"],
-                                compound=tk.LEFT)
+        action_label = tk.Label(MASTER, text="Action: ", font=FONT, image=ICONS["action"], compound=tk.LEFT)
         action_label.place(relx=0.03, rely=0.11)
         self.actions_options: tuple[str, ...] = tuple(self.actions_config.keys())
         self.active_action = tk.StringVar(value=self.actions_options[0])
@@ -114,67 +168,80 @@ class Main:
                                             textvariable=self.active_action, height=15)
         self.action_dropdown.place(relx=0.16, rely=0.12)
         self.action_dropdown.bind("<<ComboboxSelected>>", self.action_changed)
-        self.action_dropdown.configure(font=self.FONT)
+        self.action_dropdown.configure(font=FONT)
 
         # Create the `Pick` button, and Initialize invisible fullscreen and picked coordinates
-        self.pick_button = tk.Button(self.MASTER, text="Pick", font=self.FONT, image=self.ICONS["pick"],
-                                     compound=tk.RIGHT, command=self.pick_coordinate)
+        self.pick_button = tk.Button(MASTER, text="Pick", font=FONT, image=ICONS["pick"], compound=tk.RIGHT,
+                                     command=self.pick_coordinate)
         self.pick_button.place(relx=0.51, rely=0.08)
         self.fake_fullscreen: Optional[tk.Toplevel] = None
         self.pick_x: int = 0
         self.pick_y: int = 0
         # Create the coordinate labels
-        self.x_label = tk.Label(text="X: ", font=self.FONT)
+        self.x_label = tk.Label(text="X: ", font=FONT)
         self.x_label.place(relx=0.42, rely=0.08)
-        self.y_label = tk.Label(text="Y: ", font=self.FONT)
+        self.y_label = tk.Label(text="Y: ", font=FONT)
         self.y_label.place(relx=0.42, rely=0.12)
 
+        # Create the `Insert` button (`add_button`)
+        self.add_button = tk.Button(MASTER, text="Insert", font=FONT, image=ICONS["add"], compound=tk.RIGHT,
+                                    command=self.add_row)
+        self.add_button.place(relx=0.60, rely=0.08)
+
+        # Create the `Settings` button
+        self.settings_button = tk.Button(MASTER, text="Settings", font=FONT, compound=tk.RIGHT,
+                                         command=self.open_and_reload_settings)
+        self.settings_button.place(relx=0.72, rely=0.08)
+        self.add_mode = "Insert"
+
+        # Create the `Github` button
+        self.movedown_button = tk.Button(MASTER, text="Github", font=FONT, image=ICONS["github"],
+                                         compound=tk.RIGHT, command=self.open_github)
+        self.movedown_button.place(relx=0.85, rely=0.08)
+
+        # ============ LEFT PANEL ============
+        # ------------------------------------
         # Create the workflow table
         self.column_names = ("Seq", "Action", "X", "Y", "Delay (ms)", "Repeat", "Comment")
         self.table: Optional[ttk.Treeview] = None
         self.create_table()
         self.table_columns_indexed = dict(zip(self.column_names, range(7)))
 
-        # Create the `Add` button
-        self.add_button = tk.Button(self.MASTER, text="Add", font=self.FONT, image=self.ICONS["add"],
-                                    compound=tk.RIGHT, command=self.add_row)
-        self.add_button.place(relx=0.60, rely=0.08)
-
-        # Create the `Github` button
-        self.movedown_button = tk.Button(self.MASTER, text="Github", font=self.FONT, image=self.ICONS["github"],
-                                         compound=tk.RIGHT, command=self.open_github)
-        self.movedown_button.place(relx=0.69, rely=0.08)
-
+        # ============ RIGHT PANEL ============
+        # -------------------------------------
         # Create the `Delete` button
-        self.delete_button = tk.Button(self.MASTER, text="Delete", font=self.FONT, image=self.ICONS["delete"],
+        self.delete_button = tk.Button(MASTER, text="Delete", font=FONT, image=ICONS["delete"],
                                        compound=tk.RIGHT, command=self.delete_row)
         self.delete_button.place(relx=0.82, rely=0.20)
 
         # Create the `Move Up` button
-        self.moveup_button = tk.Button(self.MASTER, text="Move Up", font=self.FONT, image=self.ICONS["moveup"],
+        self.moveup_button = tk.Button(MASTER, text="Move Up", font=FONT, image=ICONS["moveup"],
                                        compound=tk.RIGHT, command=self.move_up)
         self.moveup_button.place(relx=0.82, rely=0.29)
 
         # Create the `Move Down` button
-        self.movedown_button = tk.Button(self.MASTER, text="Move Down", font=self.FONT, image=self.ICONS["movedown"],
+        self.movedown_button = tk.Button(MASTER, text="Move Down", font=FONT, image=ICONS["movedown"],
                                          compound=tk.RIGHT, command=self.move_down)
         self.movedown_button.place(relx=0.82, rely=0.38)
 
         # Create the `Save` button
-        save_button = tk.Button(self.MASTER, text="Save", font=self.FONT, image=self.ICONS["save"], compound=tk.RIGHT,
+        save_button = tk.Button(MASTER, text="Save", font=FONT, image=ICONS["save"], compound=tk.RIGHT,
                                 command=self.save_file)
         save_button.place(relx=0.82, rely=0.47)
 
+        # ============ BOTTOM PANEL ============
+        # --------------------------------------
         # Create `Tip` label
-        self.tip_num = random.randint(0, len(self.TIPS)-1)
-        tip_icon = self.ICONS["tip"].subsample(2)
-        self.tip_label = ttk.Label(self.MASTER, text=f"Tip: {self.TIPS[self.tip_num]}",
+        self.tip_num = random.randint(0, len(TIPS)-1)
+        tip_icon = ICONS["tip"].subsample(2)
+        self.tip_label = ttk.Label(MASTER, text=f"Tip: {TIPS[self.tip_num]}",
                                    image=tip_icon, compound=tk.LEFT, width=100)
         self.tip_label.bind("<Button-1>", self.tip_changed)
         self.tip_label.place(relx=0.03, rely=0.95)
+        self.view_tips = True
 
         # Create the `Failsafe` dropdown
-        failsafe_label = tk.Label(self.MASTER, text="Failsafe: ", font=self.FONT, image=self.ICONS["failsafe"],
+        failsafe_label = tk.Label(MASTER, text="Failsafe: ", font=FONT, image=ICONS["failsafe"],
                                   compound=tk.LEFT)
         failsafe_label.place(relx=0.65, rely=0.85)
         failsafe_options = ("esc", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12")
@@ -182,25 +249,29 @@ class Main:
         failsafe_dropdown = ttk.Combobox(values=failsafe_options, state="readonly", textvariable=self.active_failsafe,
                                          width=7)
         failsafe_dropdown.place(relx=0.79, rely=0.86)
-        failsafe_dropdown.configure(font=self.FONT)
+        failsafe_dropdown.configure(font=FONT)
 
         # Create the `Run` button
-        self.run_button = tk.Button(self.MASTER, text="Run", font=self.FONT, image=self.ICONS["run"],
+        self.run_button = tk.Button(MASTER, text="Run", font=FONT, image=ICONS["run"],
                                     compound=tk.RIGHT, command=self.run_starter)
         self.run_button.place(relx=0.9, rely=0.85)
+        self.run_mode = True
         self.run_flag = True
         self.hold_session = HoldSession()
         self.holds_next = False
 
-        # MAIN WINDOW START
-        self.MASTER.mainloop()
+        # ============ MAIN WINDOW START ============
+        # -------------------------------------------
+        MASTER.mainloop()
 
     """
     Helper function notes
     1.  event is a used parameter for tkinter event bindings
     """
 
-    def filter_changed(self, event: tk.Event = None):
+    # ============ TOP PANEL ============
+    # -----------------------------------
+    def filter_changed(self, event: tk.Event):
         active_filter = self.active_filter.get()
         if active_filter == "All":
             # Show all options
@@ -218,23 +289,16 @@ class Main:
         else:
             self.pick_button["state"] = "disabled"
 
-    def tip_changed(self, event: tk.Event):
-        prev_num = self.tip_num
-        self.tip_num = random.randint(0, len(self.TIPS)-1)
-        while self.tip_num == prev_num:
-            self.tip_num = random.randint(0, len(self.TIPS)-1)
-        self.tip_label.config(text=f"Tip: {self.TIPS[self.tip_num]}")
-
     def pick_coordinate(self):
         # New invisible fullscreen window
-        self.fake_fullscreen = tk.Toplevel(self.MASTER)
+        self.fake_fullscreen = tk.Toplevel(MASTER)
         self.fake_fullscreen.attributes("-alpha", 1 / 256)
         self.fake_fullscreen.attributes("-fullscreen", True)
         # Binding window as button
         self.fake_fullscreen.bind("<Button-1>", self.get_clicked_position)
         self.fake_fullscreen.config(cursor="crosshair")
         # Minimize MASTER window while wait for the user to click on the fullscreen
-        self.MASTER.iconify()
+        MASTER.iconify()
         self.fake_fullscreen.wait_window()
 
     def get_clicked_position(self, event: tk.Event):
@@ -245,12 +309,34 @@ class Main:
         # Unbind button, destroy fullscreen, and pop back MASTER window
         self.fake_fullscreen.unbind("<Button-1>")
         self.fake_fullscreen.destroy()
-        self.MASTER.deiconify()
+        MASTER.deiconify()
 
+    def open_and_reload_settings(self):
+        settings_window = SettingsWindow(self)
+        MASTER.wait_window(settings_window.TOP)
+        self.add_mode = "Insert" if settings_window.add_mode else "Append"
+        self.add_button.config(text=self.add_mode)
+        self.view_tips = settings_window.view_tips
+        if self.view_tips:
+            self.tip_label.place(relx=0.03, rely=0.95)
+        else:
+            self.tip_label.place_forget()
+        self.run_mode = settings_window.run_mode
+        if self.run_mode:
+            self.run_button.config(text="Run")  # Add code and change icon
+        else:
+            self.run_button.config(text="Compile")  # Add code and change icon
+
+    @staticmethod
+    def open_github():
+        webbrowser.open_new("https://github.com/Waterdragen/keyrun")
+
+    # ============ LEFT PANEL ============
+    # ------------------------------------
     def create_table(self):
         # Create the table
         column_widths = (30, 100, 30, 30, 60, 60, 200)
-        self.table = EditableTreeview(self.MASTER, columns=self.column_names, show="headings")
+        self.table = EditableTreeview(MASTER, columns=self.column_names, show="headings")
         # Set the column headings
         for col_name in self.column_names:
             self.table.heading(col_name, text=col_name)
@@ -261,6 +347,8 @@ class Main:
         self.table.pack(side=tk.TOP, padx=5, pady=5, fill=tk.BOTH, expand=True)
         self.table.place(relwidth=0.75, relheight=0.6, relx=0.03, rely=0.2)
 
+    # ============ RIGHT PANEL ============
+    # -------------------------------------
     def add_row(self):
         # Get the data for the new row
         seq = len(self.table.get_children()) + 1
@@ -268,8 +356,16 @@ class Main:
         delay = 100
         repeat = 1
         comment = ""
+        values = (seq, action, self.pick_x, self.pick_y, delay, repeat, comment)
         # Add the new row
-        self.table.insert("", tk.END, values=(seq, action, self.pick_x, self.pick_y, delay, repeat, comment))
+        if self.add_mode == "Insert":
+            selected_item = self.table.focus()
+            if selected_item:
+                self.table.insert("", self.table.index(selected_item)+1, values=values)
+            else:
+                self.table.insert("", tk.END, values=values)
+        if self.add_mode == "Append":
+            self.table.insert("", tk.END, values=values)
 
     def delete_row(self):
         # Get the selected row
@@ -321,9 +417,31 @@ class Main:
         self.table.item(item1, values=(seq1, *values2))
         self.table.item(item2, values=(seq2, *values1))
 
-    @staticmethod
-    def open_github():
-        webbrowser.open_new("https://github.com/Waterdragen/keyrun")
+    def save_file(self):
+        # Open file save dialog
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv")
+        if not file_path:
+            return
+
+        # Open file for writing
+        with open(file_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            # Write headers
+            headers = self.column_names
+            writer.writerow(headers)
+            # Write data rows
+            for item in self.table.get_children():
+                values = self.table.item(item)["values"]
+                writer.writerow(values)
+
+    # ============ BOTTOM PANEL ============
+    # --------------------------------------
+    def tip_changed(self, event: tk.Event):
+        prev_num = self.tip_num
+        self.tip_num = random.randint(0, len(TIPS)-1)
+        while self.tip_num == prev_num:
+            self.tip_num = random.randint(0, len(TIPS)-1)
+        self.tip_label.config(text=f"Tip: {TIPS[self.tip_num]}")
 
     def col_index(self, header: str) -> int:
         return self.table_columns_indexed[header]
@@ -351,6 +469,9 @@ class Main:
             self.run_button["state"] = "normal"
 
     def run(self):
+        if not self.run_mode:
+            self.compile()
+            return
         for item in self.table.get_children():
             values: list = self.table.item(item)["values"]
             # Repeat action
@@ -415,23 +536,12 @@ class Main:
     def release_all(self):
         self.hold_session.release_all()
 
-    def save_file(self):
-        # Open file save dialog
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv")
-        if not file_path:
-            return
-
-        # Open file for writing
-        with open(file_path, 'w', newline='') as f:
-            writer = csv.writer(f)
-            # Write headers
-            headers = self.column_names
-            writer.writerow(headers)
-            # Write data rows
-            for item in self.table.get_children():
-                values = self.table.item(item)["values"]
-                writer.writerow(values)
-
+    def compile(self):
+        for item in self.table.get_children():
+            values: list = self.table.item(item)["values"]
+            # Do something with the values
+            # Logger
+            pass
 
 if __name__ == '__main__':
     Main()
