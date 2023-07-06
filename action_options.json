@@ -1,66 +1,471 @@
 {
-	"Left Click": {
-		"coord": true,
-		"input": false
-	},
-	"Left Double Click": {
-		"coord": true,
-		"input": false
-	},
-	"Middle Click": {
-		"coord": true,
-		"input": false
-	},
-	"Right Click": {
-		"coord": true,
-		"input": false
-	},
-	"Scroll Up": {
-		"coord": false,
-		"input": false
-	},
-	"Scroll Down": {
-		"coord": false,
-		"input": false
-	},
-	"Ctrl + Z": {
-		"coord": false,
-		"input": false
-	},
-	"Ctrl + X": {
-		"coord": false,
-		"input": false
-	},
-	"Ctrl + C": {
-		"coord": false,
-		"input": false
-	},
-	"Ctrl + V": {
-		"coord": false,
-		"input": false
-	},
-	"Ctrl + A": {
-		"coord": false,
-		"input": false
-	},
-	"Hold Ctrl": {
-		"coord": false,
-		"input": false
-	},
-	"Hold Alt": {
-		"coord": false,
-		"input": false
-	},
-	"Hold Shift": {
-		"coord": false,
-		"input": false
-	},
-	"Press Key": {
-		"coord": false,
-		"input": true
-	},
-	"Type Comment": {
-		"coord": false,
-		"input": true
-	}
+    "Left Click": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "left_click",
+        "key name": null
+    },
+    "Left Double Click": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "left_double_click",
+        "key name": null
+    },
+    "Middle Click": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "middle_click",
+        "key name": null
+    },
+    "Right Click": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "right_click",
+        "key name": null
+    },
+    "Left Mouse Up": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "left_mouse_up",
+        "key name": null
+    },
+    "Left Mouse Down": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "left_mouse_down",
+        "key name": null
+    },
+    "Middle Mouse Up": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "middle_mouse_up",
+        "key name": null
+    },
+    "Middle Mouse Down": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "middle_mouse_down",
+        "key name": null
+    },
+    "Right Mouse Up": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "right_mouse_up",
+        "key name": null
+    },
+    "Right Mouse Down": {
+        "args": "xy",
+        "type": "mouse",
+        "use import": true,
+        "method": "right_mouse_down",
+        "key name": null
+    },
+    "Scroll Up": {
+        "args": "strength",
+        "type": "mouse",
+        "use import": true,
+        "method": "scroll_up",
+        "key name": null
+    },
+    "Scroll Down": {
+        "args": "strength",
+        "type": "mouse",
+        "use import": true,
+        "method": "scroll_down",
+        "key name": null
+    },
+    "Ctrl + Z": {
+        "args": null,
+        "type": "hotkey",
+        "use import": true,
+        "method": "ctrl_z",
+        "key name": null
+    },
+    "Ctrl + X": {
+        "args": null,
+        "type": "hotkey",
+        "use import": true,
+        "method": "ctrl_x",
+        "key name": null
+    },
+    "Ctrl + C": {
+        "args": null,
+        "type": "hotkey",
+        "use import": true,
+        "method": "ctrl_c",
+        "key name": null
+    },
+    "Ctrl + V": {
+        "args": null,
+        "type": "hotkey",
+        "use import": true,
+        "method": "ctrl_v",
+        "key name": null
+    },
+    "Ctrl + A": {
+        "args": null,
+        "type": "hotkey",
+        "use import": true,
+        "method": "ctrl_a",
+        "key name": null
+    },
+    "Hold Ctrl": {
+        "args": "key",
+        "type": "hotkey",
+        "use import": false,
+        "method": "hold_key",
+        "key name": "ctrl"
+    },
+    "Hold Shift": {
+        "args": "key",
+        "type": "hotkey",
+        "use import": false,
+        "method": "hold_key",
+        "key name": "shift"
+    },
+    "Hold Alt": {
+        "args": "key",
+        "type": "hotkey",
+        "use import": false,
+        "method": "hold_key",
+        "key name": "alt"
+    },
+    "Hold Win": {
+        "args": "key",
+        "type": "hotkey",
+        "use import": false,
+        "method": "hold_key",
+        "key name": "win"
+    },
+    "Hold Command": {
+        "args": "key",
+        "type": "hotkey",
+        "use import": false,
+        "method": "hold_key",
+        "key name": "command"
+    },
+    "Hold Options": {
+        "args": "key",
+        "type": "hotkey",
+        "use import": false,
+        "method": "hold_key",
+        "key name": "options"
+    },
+    "Hold Fn": {
+        "args": "key",
+        "type": "hotkey",
+        "use import": false,
+        "method": "hold_key",
+        "key name": "fn"
+    },
+    "Hold next press": {
+        "args": null,
+        "type": "hotkey",
+        "use import": false,
+        "method": "hold_next_press",
+        "key name": null
+    },
+    "Release all": {
+        "args": null,
+        "type": "hotkey",
+        "use import": false,
+        "method": "release_all",
+        "key name": null
+    },
+    "Ctrl": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "ctrl"
+    },
+    "Shift": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "shift"
+    },
+    "Alt": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "alt"
+    },
+    "Win": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "win"
+    },
+    "Command": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "command"
+    },
+    "Options": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "options"
+    },
+    "Fn": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "fn"
+    },
+    "Up": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "up"
+    },
+    "Down": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "down"
+    },
+    "Left": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "left"
+    },
+    "Right": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "right"
+    },
+    "Tab": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "tab"
+    },
+    "Space": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "space"
+    },
+    "Backspace": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "backspace"
+    },
+    "Enter": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "enter"
+    },
+    "Printscreen": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "printscreen"
+    },
+    "Delete": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "delete"
+    },
+    "Insert": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "insert"
+    },
+    "Home": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "home"
+    },
+    "PageUp": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "pageup"
+    },
+    "PageDown": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "pagedown"
+    },
+    "NumLock": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "numlock"
+    },
+    "CapsLock": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "capslock"
+    },
+    "ScrollLock": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "scrolllock"
+    },
+    "Esc": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "esc"
+    },
+    "F1": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f1"
+    },
+    "F2": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f2"
+    },
+    "F3": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f3"
+    },
+    "F4": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f4"
+    },
+    "F5": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f5"
+    },
+    "F6": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f6"
+    },
+    "F7": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f7"
+    },
+    "F8": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f8"
+    },
+    "F9": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f9"
+    },
+    "F10": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f10"
+    },
+    "F11": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f11"
+    },
+    "F12": {
+        "args": "key",
+        "type": "non char key",
+        "use import": false,
+        "method": "press_key",
+        "key name": "f12"
+    },
+    "Press Comment Char": {
+        "args": "comment char",
+        "type": "input",
+        "use import": false,
+        "method": "press_key",
+        "key name": null
+    },
+    "Type Comment": {
+        "args": "comment",
+        "type": "input",
+        "use import": true,
+        "method": "type_comment",
+        "key name": null
+    },
+    "Type Text File comment": {
+        "args": "comment",
+        "type": "input",
+        "use import": true,
+        "method": "type_text_file",
+        "key name": null
+    },
+    "Sleep": {
+        "args": "ms",
+        "type": "sleep",
+        "use import": false,
+        "method": "sleep",
+        "key name": null
+    }
 }
