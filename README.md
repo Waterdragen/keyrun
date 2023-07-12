@@ -6,3 +6,4 @@ Automate your mouse and keyboard to do cool things. Free and open source alterna
 
 ## WIP list
 - disable certain fields depending on actions
+- add more tips
